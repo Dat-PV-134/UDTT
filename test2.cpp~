@@ -163,35 +163,6 @@ void listing_hoanvi(int n) {
 	cout << endl << count << endl;
 }
 
-string convertFloatToString(float number, int n) {
-	string res = "";
-	
-	string strNguyen = "";
-	int tempNguyen = (int) number;
-	int count = 0;
-	while (tempNguyen > 0) {
-		strNguyen += (tempNguyen % 10) + '0';
-		tempNguyen /= 10;
-		count++;
-	}
-	for (int i = count - 1; i >= 0; i--) {
-		res += strNguyen[i];
-	}
-
-	res += ".";
-
-	float thapPhan = number - (int) number;
-	while (n > 0) {
-		thapPhan *= 10;
-		if (n == 1) thapPhan += 0.5f;
-		res += ((int) (thapPhan)) + '0';
-		thapPhan -= (int) thapPhan;
-		n--;
-	}
-
-	return res;
-}
-
 int main() {
 	initList();
 	cout << getTotalWorkingTime(cvList, 7);
