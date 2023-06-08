@@ -2,213 +2,117 @@
 
 using namespace std;
 
-class CV {
-private:
-	int maCV;
-	int startTime;
-	int endTime;
+typedef struct Quat {
+	std::string tenHang;
+	std::string mauSac;
+	int giaBan;
 
-public:
-	CV(){}
-	CV(int maCV, int startTime, int endTime) {
-		this->maCV = maCV;
-		this->startTime = startTime;
-		this->endTime = endTime;
+	void xuat() {
+		std::cout << tenHang << std::setw(20) << mauSac << std::setw(20) << giaBan << std::endl;
 	}
+} QType;
 
-	int getWorkingTime() const {
-		return endTime - startTime;
-	}
-
-	string toString() {
-		return to_string(maCV) + " - " + to_string(startTime) + " - " + to_string(endTime);
-	}
-
-	int getMa() const {
-		return maCV;
-	}
-
-	int getStart() const {
-		return startTime;
-	}
-
-	int getEnd() const {
-		return endTime;
-	}
-
-	bool operator<(CV other) {
-		return this->endTime < other.endTime;
-	}
-};
-
-/*
-CV cvList[7] = {
-    {0, 4, 9},
-    {1, 13, 21},
-    {2, 7, 9},
-    {3, 5, 8},
-    {4, 8, 13},
-    {5, 9, 16},
-    {6, 17, 22}
-};
-*/
-
-CV cvList[7];
-vector<CV> ans;
-int count = 0;
-
-void initList() {
-	cvList[0] = CV(0, 4, 9);
-	cvList[1] = CV(1, 13, 21);
-	cvList[2] = CV(2, 7, 9);
-	cvList[3] = CV(3, 5, 8);
-	cvList[4] = CV(4, 8, 13);
-	cvList[5] = CV(5, 9, 16);
-	cvList[6] = CV(6, 17, 22);
-}
-
-
-int getTotalWorkingTime(CV cvList[], int n) {
-	if (n == 1) return cvList[0].getWorkingTime();
-	return cvList[n - 1].getWorkingTime() + getTotalWorkingTime(cvList, n - 1);
-}
-
-int cau2aCach1(CV cvList[], int n, vector<CV> &ans) {
+void hienThiDS(QType a[], int n) {
+	std::cout << "DANH SACH QUAT" << std::endl;
 	for (int i = 0; i < n; i++) {
-		bool check = true;
-		for (int j = 0; j < ans.size(); j++) {
-			if (cvList[i].getEnd() > ans[j].getStart() && cvList[i].getStart() < ans[j].getEnd()) {
-				check = false;
-				break;
+		a[i].xuat();
+	}
+}
+
+int muaQuat(QType a[], int n, int p, QType res[]) {
+	std::vector<std::vector<int>> dp(n + 1, std::vector<int>(p + 1, 0));
+
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= p; j++) {
+			if (a[i - 1].giaBan <= j) {
+				dp[i][j] = std::max(dp[i - 1][j], dp[i - 1][j - a[i - 1].giaBan] + a[i - 1].giaBan);
+			} else {
+				dp[i][j] = dp[i - 1][j];
 			}
 		}
-		if (check) ans.push_back(cvList[i]);
 	}
-	return ans.size();
-}
 
-void next_config(int x[], int k, int i) {
-	 x[i] += 1;
-	 i++;
-	 while (i <= k) {
-		 x[i] = x[i - 1] + 1;
-		 i++;
-	 }
-}
-
-void view_config(int x[], int k) {
-	for (int i = 1; i <= k; i++) {
-		cout << cvList[x[i] - 1].toString() << endl;
-	}
-	cout << endl;
-}
-
-void listing_config(int k, int n) {
-	int i, x[k + 1] = {0};
-	int count = 0;
-	for (int i = 0; i <= k; i++) {
-		x[i] = i;
-	}
-	do {
-		count++;	
-		view_config(x, k);
-		i = k;
-		while(i > 0 && x[i] == n - k + i) {
-			i--;
+	int dem = 0;
+	int i = n;
+	int j = p;
+	while (i > 0 && j > 0) {
+		if (dp[i][j] != dp[i - 1][j]) {
+			res[dem++] = a[i - 1];
+			j -= a[i - 1].giaBan;
 		}
-		if (i > 0) {
-			next_config(x, k, i);
-		}
-	} while (i > 0);
-	cout << count << endl;
+		i--;
+	}
+
+	return dem;
 }
 
-void view_hoanvi(int x[], int n) {
-	for (int i = 1; i <= n; i++) {
-		cout << cvList[x[i]-1].toString() << endl;
+void quickSort(QType a[], int left, int right) {
+	if (left < right) {
+		int k = (left + right) / 2;
+		QType t = a[k];
+		int i = left, j = right;
+		do {
+			while (a[i].giaBan < t.giaBan) i++;
+			while (a[j].giaBan > t.giaBan) j--;
+			if (i <= j) {
+				QType tg = a[i];
+				a[i] = a[j];
+				a[j] = tg;
+				i++;
+				j--;
+			}
+		} while (i <= j);
+		quickSort(a, left, j);
+		quickSort(a, i, right);
 	}
-	cout << endl;
 }
 
-void next_hoanvi(int x[], int n, int i) {
-	int k = n;
-	while (x[k] < x[i]) {
-		k--;
+int greedyRes(QType a[], int n, int p, QType res[]) {
+	int cnt = 0;
+	int i = n - 1;
+	while (p > 0 && i > 0) {
+		res[cnt] = a[i];
+		p -= a[i].giaBan;
+		cnt++;
+		i--;
 	}
-	swap(x[i], x[k]);
-	int j = n;
-	i++;
-	while (i < j) {
-		swap(x[i], x[j]);
-		i++;
-		j--;
-	}
-}
-
-void listing_hoanvi(int n) {
-	int i, x[n + 1] = {0};
-	int count = 0;
-	for (int i = 1; i <= n; i++) {
-		x[i] = i;
-	}
-	do {
-		count++;
-		view_hoanvi(x, n);
-		i = n - 1;
-		while (i > 0 && x[i] > x[i + 1]) i--;
-		if (i > 0) {
-			next_hoanvi(x, n, i);
-		}
-	} while (i > 0);
-	cout << endl << count << endl;
-}
-
-string convertFloatToString(float number, int n) {
-	string res = "";
-	
-	string strNguyen = "";
-	int tempNguyen = (int) number;
-	int count = 0;
-	while (tempNguyen > 0) {
-		strNguyen += (tempNguyen % 10) + '0';
-		tempNguyen /= 10;
-		count++;
-	}
-	for (int i = count - 1; i >= 0; i--) {
-		res += strNguyen[i];
-	}
-
-	res += ".";
-
-	float thapPhan = number - (int) number;
-	while (n > 0) {
-		thapPhan *= 10;
-		if (n == 1) thapPhan += 0.5f;
-		res += ((int) (thapPhan)) + '0';
-		thapPhan -= (int) thapPhan;
-		n--;
-	}
-
-	return res;
+	return cnt;
 }
 
 int main() {
-	initList();
-	cout << getTotalWorkingTime(cvList, 7);
-	sort(cvList, cvList + 6);
-	cout << endl;
-	for (int i = 0; i < 7; i++) {
-		cout << cvList[i].toString() << endl;
-	}
-	cout << "----------------------------" << endl;
-	int kq = cau2aCach1(cvList, 7, ans);
-	cout << kq << endl;
-	for (int i = 0; i < ans.size(); i++) {
-		cout << ans[i].toString() << endl;
-	}
-	cout << "---------------------------------" << endl;
-	//listing_config(5, 7);
-	cout << "---------------------------------" << endl;
-	listing_hoanvi(7);
-}
+	QType a[100];
+	int n = 6;
+	long p = 700000;
+	QType res[100];
+	a[0] = {"Quat 1", "Do", 400000};
+	a[1] = {"Quat 2", "Vang", 800000};
+	a[2] = {"Quat 3", "Cam", 500000};
+	a[3] = {"Quat 4", "Luc", 300000};
+	a[4] = {"Quat 5", "Lam", 900000};
+	a[5] = {"Quat 6", "Tim", 700000};
+	
+	hienThiDS(a, n);
 
+	int dem = muaQuat(a, n, p, res);
+	std::cout << "Can ban it nhat " << dem << " chiec quat ban." << std::endl;
+	std::cout << std::endl << "DANH SACH QUAT BAN DUOC: " << std::endl;
+	if (dem != 0) {
+		for (int i = dem - 1; i >= 0; i--) {
+			std::cout << res[i].tenHang << std::setw(20) << res[i].giaBan << std::endl;
+		}
+	}
+
+	quickSort(a, 0, n - 1);
+	hienThiDS(a, n);
+
+	int dem2 = greedyRes(a, n, p, res);
+	std::cout << "Can ban it nhat " << dem2 << " chiec quat ban." << std::endl;
+	std::cout << std::endl << "DANH SACH QUAT BAN DUOC: " << std::endl;
+	if (dem != 0) {
+		for (int i = dem2 - 1; i >= 0; i--) {
+			std::cout << res[i].tenHang << std::setw(20) << res[i].giaBan << std::endl;
+		}
+	} 
+
+	return 0;
+}
